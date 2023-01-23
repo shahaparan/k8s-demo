@@ -122,3 +122,71 @@
     ## kubectl get rs
     ## kubectl get po -l app=nginx-app
    ```
+   
+## 02. Storage Volume
+
+   - ### 02.01. Create EmptyDir volume
+      ```t
+         apiVersion: v1
+         kind: Pod
+         metadata:
+           name: test-nginx
+         spec:
+           containers:
+           - image: nginx
+             name: test-nginx
+             volumeMounts:
+             - mountPath: /cache
+               name: cache-volume
+           volumes:
+           - name: cache-volume
+             emptyDir: {}
+
+
+         ## Create & Display EmptyDir volume
+
+         Let's try K8 : kubectl apply -f emptydir.yml
+         pod/test-nginx created
+
+         Let's try K8 : kubectl get pods
+         NAME         READY   STATUS    RESTARTS   AGE
+         test-nginx   1/1     Running   0          7s
+
+         Let's try K8 : kubectl exec -it test-nginx -- /bin/bash
+         root@test-nginx:/# mount | grep -i cache
+         /dev/vda1 on /cache type ext4 (rw,relatime)
+         
+         kubectl describe pod test-nginx
+         kubectl delete po test-nginx
+
+      ```
+ 
+   - ### 02.02. Create HostPath volume
+      ```t
+       kubectl create -f hostpath-test.yaml
+       kubectl get po
+       kubectl exec redis-hostpath df /test-mnt
+       kubectl delete po redis-hostpath
+      ```
+         - ### HostPath - From HOST to Pod : (Node2)
+               ```t
+               cd /test-vol
+                echo "From host" > from-host.txt
+                cat from-host.txt
+               ```
+         - ### Pod (Master)
+               ```t
+                kubectl exec redis-hostpath cat /test-mnt/from-host.txt
+                echo "From host" > from-host.txt
+                cat from-host.txt
+                kubectl exec redis-hostpath -it -- /bin/sh
+                cd /test-mnt
+                echo "test host" > from-pod.txt
+                cat from-pod.txt
+               ```
+          - ### HostPath - From HOST to Pod : (Node2)
+            ```t
+            cd /test-vol
+            ls
+            cat from-pod.txt
+            ```
